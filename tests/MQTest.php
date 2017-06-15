@@ -36,7 +36,7 @@ class MQTest extends TestCase
 
     public function testPullMessage()
     {
-        $succeeded = $this->mq->pull(10, function (PullMessage $message) {
+        $succeeded = $this->mq->autoDelete(true)->pull(10, function (PullMessage $message) {
             $this->assertTrue(null !== $message, 'Got a message.');
         });
         $this->assertTrue($succeeded, 'Pull succeeded.');

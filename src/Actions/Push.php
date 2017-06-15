@@ -15,21 +15,10 @@ use HyanCat\AliyunMQ\Utils\Signature;
 
 class Push extends AbstractAction
 {
-    const URL = 'http://publictest-rest.ons.aliyun.com/message';
-
-    protected $accessKey;
-    protected $secretKey;
-
     /**
      * @var PushMessage
      */
     protected $message;
-
-    public function __construct($accessKey, $secretKey)
-    {
-        $this->accessKey = $accessKey;
-        $this->secretKey = $secretKey;
-    }
 
     public function push(PushMessage $message): string
     {

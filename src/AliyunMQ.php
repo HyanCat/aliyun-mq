@@ -10,6 +10,7 @@
 namespace HyanCat\AliyunMQ;
 
 use GuzzleHttp\Exception\ClientException;
+use HyanCat\AliyunMQ\Actions\Delete;
 use HyanCat\AliyunMQ\Actions\Pull;
 use HyanCat\AliyunMQ\Actions\Push;
 use HyanCat\AliyunMQ\Models\PushMessage;
@@ -25,13 +26,15 @@ class AliyunMQ
 
     public function push(PushMessage $message, $callback = null): bool
     {
-        $accessKey = $this->config['access_key'];
-        $secretKey = $this->config['secret_key'];
+        $accessKey  = $this->config['access_key'];
+        $secretKey  = $this->config['secret_key'];
+        $topic      = $this->config['topic'];
+        $producerId = $this->config['producer_id'];
 
         $push = new Push($accessKey, $secretKey);
 
         try {
-            $responseBody = $push->topic($this->config['topic'])->asRole($this->config['producer_id'])->push($message);
+            $responseBody = $push->topic($topic)->asRole($producerId)->push($message);
         } catch (ClientException $e) {
             return false;
         }
@@ -43,21 +46,37 @@ class AliyunMQ
         return true;
     }
 
+    private $_autoDeleted = true;
+
+    public function autoDelete($auto)
+    {
+        $this->_autoDeleted = $auto;
+
+        return $this;
+    }
+
     public function pull(int $count, $callback): bool
     {
-        $accessKey = $this->config['access_key'];
-        $secretKey = $this->config['secret_key'];
+        $accessKey  = $this->config['access_key'];
+        $secretKey  = $this->config['secret_key'];
+        $topic      = $this->config['topic'];
+        $consumerId = $this->config['consumer_id'];
 
         $pull = new Pull($accessKey, $secretKey);
 
         try {
-            $messages = $pull->topic($this->config['topic'])->asRole($this->config['consumer_id'])->pull($count);
+            $messages = $pull->topic($topic)->asRole($consumerId)->pull($count);
         } catch (ClientException $e) {
             return false;
         }
 
         foreach ($messages as $message) {
             $callback($message);
+
+            if ($this->_autoDeleted) {
+                $delete  = new Delete($accessKey, $secretKey);
+                $deleted = $delete->topic($topic)->asRole($consumerId)->delete($message->msgHandle);
+            }
         }
 
         return true;
