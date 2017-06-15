@@ -1,0 +1,4 @@
+/vendor/
+.idea
+composer.lock
+aliyun-mq.local.php
